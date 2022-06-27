@@ -14,8 +14,10 @@ async function main() {
   // await hre.run('compile');
 
   // We get the contract to deploy
-  const Token = await ethers.getContractFactory("StandardToken"); 
-  const token = await Token.deploy("Imme", "IMMES", 18, 100000e18, 0x2d1C5399a1eA642c4017EF56107D60B7Cc919664, 10);
+  const Token = await ethers.getContractFactory("Token"); 
+  const token = await Token.deploy("Imme", "IMMES");
+
+  const busd = await Token.deploy("Busd", "BUSD");
   /*
   string memory name_,
   string memory symbol_,
