@@ -3,8 +3,7 @@ pragma solidity ^0.8.4;
 
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
-
-// import '@uniswap/v2-core/contracts/interfaces/IPancakeRouter.sol';
+import "hardhat/console.sol";
 
 interface IPancakeRouter01 {
     function factory() external pure returns (address);
@@ -143,13 +142,11 @@ interface IPancakeRouter02 is IPancakeRouter01 {
 
 contract ImmeStaking is Ownable {
 
-    IPancakeRouter02 _ipancakeRouter;
     IERC20 public immeToken;
     IERC20 public busdToken;
+    address public UNISWAP_V2_ROUTER; 
 
-    address immeowner;
-    address public _imme = 0xaCc34268f5D7Cb9B11BfB1ba4D8bD2bc2B49EE4E;//hassle
-    address public _busd = 0xaCc34268f5D7Cb9B11BfB1ba4D8bD2bc2B49EE4E;//hassle
+    address immeOwner;
 
     uint256 constant sTime1 = 7 days;
     uint256 constant sTime2 = 14 days;
@@ -166,12 +163,39 @@ contract ImmeStaking is Ownable {
     }
 
     mapping(address => Staker) internal stakers;
+    
+    function addLiquidity(
+        address _tokenA,
+        address _tokenB,
+        uint _amountA,
+        uint _amountB
+    ) internal {
 
-    constructor(IERC20 _immeToken, IERC20 _busdToken) {
+        IERC20(_tokenA).approve(UNISWAP_V2_ROUTER, _amountA);
+        IERC20(_tokenB).approve(UNISWAP_V2_ROUTER, _amountB);
+
+        IPancakeRouter02(UNISWAP_V2_ROUTER)
+            .addLiquidity(
+                _tokenA,
+                _tokenB,
+                _amountA,
+                _amountB,
+                1,
+                1,
+                immeOwner,
+                block.timestamp + 100
+            );
+    }
+    constructor(IERC20 _immeToken, IERC20 _busdToken, address _router) {
+        
         immeToken = _immeToken;
         busdToken = _busdToken;
-        immeowner = msg.sender;
-        _setPancakeswap(0xaCc34268f5D7Cb9B11BfB1ba4D8bD2bc2B49EE4E);//hassle
+
+        UNISWAP_V2_ROUTER = _router;
+        immeOwner = msg.sender;
+        
+        console.log("Deploying staking contract");
+
     }
 
     function deposit(uint256 _amount ) public onlyOwner {
@@ -182,26 +206,27 @@ contract ImmeStaking is Ownable {
         require(_amount > 0, "There isn't enough your balance");
         address[] memory path;
         path = new address[](2);
-        path[0] = address(_busd);
-        path[1] = address(_imme);
-
-        stakers[msg.sender].balance = _ipancakeRouter.getAmountsOut(_amount, path)[1];//hassle
+        path[0] = address(busdToken);
+        path[1] = address(immeToken);
+        uint256[] memory out;
+        out = IPancakeRouter02(UNISWAP_V2_ROUTER).getAmountsOut(_amount, path);
         stakers[msg.sender].startTime = block.timestamp;
+        stakers[msg.sender].balance = out[1];
 
-        _ipancakeRouter.addLiquidity(_busd, _imme, _amount, stakers[msg.sender].balance, 0, 0, immeowner, block.timestamp);
+        addLiquidity(address(busdToken), address(immeToken), _amount, stakers[msg.sender].balance);
 
-        uint256 amount = stakers[msg.sender].balance;
+    }
+
+    function unstake() public {
+        require(stakers[msg.sender].balance > 0, "Insufficient balance!");
+        
+        uint256 amount = stakers[msg.sender].balance + reward(msg.sender);
+        
         immeToken.transfer(msg.sender, amount);
     }
 
-    function unstaking() public {
-        require(stakers[msg.sender].balance > 0, "Don't exist your staking amount!");
-        uint256 amount = reward(msg.sender);
-        require(immeToken.balanceOf(address(this)) > amount, "There isn't enough your balance");
-        immeToken.transfer(msg.sender, amount);
-    }
+    function reward(address _address) private view returns (uint256 reamount) {
 
-    function reward(address _address) private returns (uint256 reamount) {
         uint256 stime = block.timestamp - stakers[_address].startTime;
 
         uint256 cnt1 = stime / sTime1; 
@@ -249,7 +274,4 @@ contract ImmeStaking is Ownable {
         return amount;
     }
 
-    function _setPancakeswap(address _router) private {
-        _ipancakeRouter = IPancakeRouter02(_router);
-    }
 }

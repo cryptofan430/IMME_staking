@@ -32,6 +32,13 @@ const config: HardhatUserConfig = {
 					? [process.env.PRIVATE_KEY]
 					: [],
 		},
+		ropsten: {
+			url: process.env.ROPSTEN_RPC || "",
+			accounts:
+				process.env.PRIVATE_KEY !== undefined
+					? [process.env.PRIVATE_KEY]
+					: [],
+		},
 		mumbai: {
 			url: process.env.MUMBAI_RPC || "",
 			accounts:

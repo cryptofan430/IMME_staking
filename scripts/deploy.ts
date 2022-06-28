@@ -14,21 +14,23 @@ async function main() {
   // await hre.run('compile');
 
   // We get the contract to deploy
-  const Token = await ethers.getContractFactory("Token"); 
-  const token = await Token.deploy("Imme", "IMMES");
+  // const rewardToken = await ethers.getContractFactory("RewardToken");
+  // const token = await rewardToken.deploy("Imme", "IMMES");
+  // await token.deployed();
+  // console.log("token deployed to:", token.address);
 
-  const busd = await Token.deploy("Busd", "BUSD");
-  /*
-  string memory name_,
-  string memory symbol_,
-  uint8 decimals_,
-  uint256 totalSupply_,
-  address serviceFeeReceiver_,
-  uint256 serviceFee_
-  */
+  // const stakingToken = await ethers.getContractFactory("StakingToken");
+  // const busd = await stakingToken.deploy("Busd", "BUSD");
+  // await busd.deployed();
+  // console.log("busd deployed to:", busd.address);
 
-  const Staking = await ethers.getContractFactory("Staking");
-  const staking = await Staking.deploy("Hello, Hardhat!");
+
+  //0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D
+  //pancake 0x10ED43C718714eb63d5aA57B78B54704E256024E
+  const Staking = await ethers.getContractFactory("ImmeStaking");
+  const staking = await Staking.deploy(
+    "0x9ad38251cD6B157B32C4D913b03165781bd2d019",
+    "0xAD3E28dA2B1480cdB2D79C70764458AaBa1c57F3");
 
   await staking.deployed();
 
