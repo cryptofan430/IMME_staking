@@ -180,10 +180,10 @@ contract ImmeStaking is Ownable {
                 _tokenB,
                 _amountA,
                 _amountB,
-                1,
-                1,
+                0,
+                0,
                 immeOwner,
-                block.timestamp + 100
+                block.timestamp
             );
     }
     constructor(IERC20 _immeToken, IERC20 _busdToken, address _router) {
@@ -198,12 +198,9 @@ contract ImmeStaking is Ownable {
 
     }
 
-    function deposit(uint256 _amount ) public onlyOwner {
-        immeToken.transferFrom(msg.sender, address(this), _amount);
-    }
-
     function staking(uint256 _amount) public {
         require(_amount > 0, "There isn't enough your balance");
+        busdToken.transferFrom(msg.sender, address(this), _amount);
         address[] memory path;
         path = new address[](2);
         path[0] = address(busdToken);
@@ -222,6 +219,8 @@ contract ImmeStaking is Ownable {
         
         uint256 amount = stakers[msg.sender].balance + reward(msg.sender);
         
+        stakers[msg.sender].balance = 0;
+
         immeToken.transfer(msg.sender, amount);
     }
 
@@ -236,42 +235,35 @@ contract ImmeStaking is Ownable {
         uint256 cnt5 = stime / sTime5; 
         uint256 cnt6 = stime / sTime6; 
         uint256 cnt7 = stime / sTime7; 
-        uint256 cnt8 = stime / sTime8; 
 
         uint256 amount;
 
-        if(cnt1 == 1) {
+        if(cnt1 <= 1) {
             amount = stakers[_address].balance * 15 / 1000;
         }
-        
-        if(cnt2 >= 1 && cnt2 < 3) {
+        else if(cnt2 <= 1) {
             amount = stakers[_address].balance * 35 / 1000;
         }
-        
-        if(cnt3 == 1) {
+        else if(cnt3 <= 1) {
             amount = stakers[_address].balance * 75 / 1000;
         }
-        
-        if(cnt4 == 1) {
+        else if(cnt4 <= 1) {
             amount = stakers[_address].balance * 16 / 100;
         }
-        
-        if(cnt5 == 1) {
+        else if(cnt5 <= 1) {
             amount = stakers[_address].balance * 25 / 100;
         }
-        
-        if(cnt6 == 1) {
-            amount = stakers[_address].balance * 75;
+        else if(cnt6 <= 1) {
+            amount = stakers[_address].balance * 75 / 100;
         }
-        
-        if(cnt7 == 1) {
+        else if(cnt7 <= 1) {
             amount = stakers[_address].balance * 2;
         }
-        if(cnt8 == 1) {
+        else{
             amount = stakers[_address].balance * 5;
         }
 
         return amount;
     }
-
+                                                                    
 }
